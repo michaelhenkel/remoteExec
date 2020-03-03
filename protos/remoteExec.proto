@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package protos;
+
+// The greeting service definition.
+service RemoteExec {
+    rpc GetIP(Dummy) returns (CmdResult) {}
+    rpc GetFileContent(FilePath) returns (CmdResult) {}
+    rpc ExecuteCommand(Command) returns (CmdResult) {}
+    rpc PowerOff(Dummy) returns (CmdResult) {}
+}
+
+message CmdResult {
+    string Result = 1;
+  }
+
+message FilePath {
+    string Path = 1;
+  }
+
+message Command {
+    string Cmd = 1;
+  }
+
+message Dummy {
+    string Dummy = 1;
+  }
