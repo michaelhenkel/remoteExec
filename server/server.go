@@ -28,33 +28,45 @@ type server struct {
 }
 
 func (s *server) GetIP(ctx context.Context, in *protos.Dummy) (*protos.CmdResult, error) {
+	fmt.Println("Getting IP")
 	cmdResult := &protos.CmdResult{}
 	localIP := getOutboundIP()
+	fmt.Printf("Got IP: %s\n", localIP.String())
 	cmdResult.Result = localIP.String()
 	return cmdResult, nil
 }
 
 func (s *server) GetFileContent(ctx context.Context, in *protos.FilePath) (*protos.CmdResult, error) {
+	fmt.Printf("Getting content for file %s\n", in.Path)
 	cmdResult := &protos.CmdResult{}
 	if _, err := os.Stat(in.Path); os.IsNotExist(err) {
 		cmdResult.Result = "file doesn't exists"
 		return cmdResult, nil
 	}
 	content, err := ioutil.ReadFile(in.Path)
+	fmt.Printf("Trying to read file: %s\n", in.Path)
 	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		cmdResult.Result = err.Error()
 		return cmdResult, err
 	}
+	fmt.Printf("Content of file: %s\n", string(content))
 	cmdResult.Result = strings.TrimSuffix(string(content), "\n")
 	return cmdResult, nil
 }
 
 func (s *server) ExecuteCommand(ctx context.Context, in *protos.Command) (*protos.CmdResult, error) {
+	fmt.Println("Executing ...")
 	cmdResult := &protos.CmdResult{}
+	fmt.Printf("Executing cmd: %s\n", in.Cmd)
 	result, err := execCmd(in.Cmd)
 
 	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		cmdResult.Result = err.Error()
 		return cmdResult, err
 	}
+	fmt.Printf("result of cmd: %s\n", result)
 	cmdResult.Result = result
 	return cmdResult, nil
 }
@@ -83,7 +95,6 @@ func main() {
 func getFlag() (socket *string) {
 	socket = flag.String("socketpath", "/tmp/remotexec.socket", "absolute path to unix socket")
 	flag.Parse()
-	fmt.Printf("flags: socket: %s", *socket)
 	return socket
 }
 
