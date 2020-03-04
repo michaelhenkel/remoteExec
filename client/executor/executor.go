@@ -3,14 +3,11 @@ package executor
 import (
 	"bytes"
 	"context"
-	"flag"
-	"fmt"
 	"log"
 	"net"
 	"os"
 	"time"
 
-	"github.com/docker.bak/docker/daemon/cluster/executor"
 	"github.com/michaelhenkel/remoteExec/protos"
 	"google.golang.org/grpc"
 )
@@ -27,7 +24,8 @@ type Executor struct {
 }
 
 func (e *Executor) GetIP() (*string, error) {
-	c, ctx, conn, cancel := newClient(socket)
+	socket := e.Socket
+	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
 	ipGetResult, err := c.GetIP(ctx, &protos.Dummy{})
@@ -38,10 +36,11 @@ func (e *Executor) GetIP() (*string, error) {
 }
 
 func (e *Executor) GetFileContent(filePath string) (*string, error) {
-	c, ctx, conn, cancel := newClient(socket)
+	socket := e.Socket
+	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
-	fileResult, err := c.GetFileContent(ctx, &protos.FilePath{Path: filePath)
+	fileResult, err := c.GetFileContent(ctx, &protos.FilePath{Path: filePath})
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +48,8 @@ func (e *Executor) GetFileContent(filePath string) (*string, error) {
 }
 
 func (e *Executor) ExecuteCommand(cmd string) (*string, error) {
-	c, ctx, conn, cancel := newClient(socket)
+	socket := e.Socket
+	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
 	cmdResult, err := c.ExecuteCommand(ctx, &protos.Command{Cmd: cmd})
