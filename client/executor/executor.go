@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/michaelhenkel/remoteExec/protos"
-	"github.com/michaelhenkel/remoteExec/sshtunnel"
 	"google.golang.org/grpc"
 )
 
@@ -60,15 +59,15 @@ func (e *Executor) ExecuteCommand(cmd string) (*string, error) {
 	return &cmdResult.Result, nil
 }
 
-func (e *Executor) SetupTunnel(config sshtunnel.Configuration) (*string, error) {
+func (e *Executor) SetupTunnel(vmPort, hostPort int, username string) (*string, error) {
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
 	cmdResult, err := c.AddTunnel(ctx, &protos.Tunnel{
-		HostPort: int32(config.Forwards[0].Remote.Port),
-		VMPort:   int32(config.Forwards[0].Local.Port),
-		Username: config.SshServer.Username,
+		HostPort: int32(hostPort),
+		VMPort:   int32(vmPort),
+		Username: username,
 	})
 	if err != nil {
 		return nil, err
