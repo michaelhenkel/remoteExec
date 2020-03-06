@@ -7,6 +7,7 @@ service RemoteExec {
     rpc GetIP(Dummy) returns (CmdResult) {}
     rpc GetFileContent(FilePath) returns (CmdResult) {}
     rpc ExecuteCommand(Command) returns (CmdResult) {}
+    rpc AddTunnel(Tunnel) returns (CmdResult) {}
     rpc PowerOff(Dummy) returns (CmdResult) {}
 }
 
@@ -20,6 +21,12 @@ message FilePath {
 
 message Command {
     string Cmd = 1;
+  }
+
+message Tunnel {
+    int32   HostPort = 1;
+    int32   VMPort = 2;
+    string  Username = 3;
   }
 
 message Dummy {

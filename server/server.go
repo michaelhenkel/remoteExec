@@ -12,7 +12,9 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/michaelhenkel/remoteExec/genkey"
 	"github.com/michaelhenkel/remoteExec/protos"
+	"github.com/michaelhenkel/remoteExec/sshtunnel"
 	"google.golang.org/grpc"
 )
 
@@ -71,9 +73,37 @@ func (s *server) ExecuteCommand(ctx context.Context, in *protos.Command) (*proto
 	return cmdResult, nil
 }
 
+func (s *server) SetupTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdResult, error) {
+	fmt.Println("Setting up tunnel ...")
+	cmdResult := &protos.CmdResult{}
+	fmt.Printf("Tunnel srcPort %d, hostPort %d, user %s\n", in.GetVMPort(), in.GetHostPort(), in.GetUsername())
+	err := setupTunnel(in)
+	if err != nil {
+		fmt.Printf("Error: %s\n", err)
+		cmdResult.Result = err.Error()
+		return cmdResult, err
+	}
+	cmdResult.Result = "tunnel created"
+	return cmdResult, nil
+}
+
 func main() {
 
 	fmt.Println("Serving...")
+
+	privateKeyPath := "/id_rsa"
+	publicKeyPath := "/id_rsa.pub"
+	privKeyExists := false
+	pubKeyExists := false
+	if _, err := os.Stat(privateKeyPath); os.IsNotExist(err) {
+		privKeyExists = true
+	}
+	if _, err := os.Stat(publicKeyPath); os.IsNotExist(err) {
+		privKeyExists = true
+	}
+	if !privKeyExists || !pubKeyExists {
+		genkey.GenKey(privateKeyPath, publicKeyPath)
+	}
 
 	logger.Println("Started serving")
 	socket := getFlag()
@@ -118,4 +148,32 @@ func execCmd(cmd string) (string, error) {
 		return "", err
 	}
 	return string(out), nil
+}
+
+func setupTunnel(tunnel *protos.Tunnel) error {
+	gatewayIP := getOutboundIP()
+	gatewayIP = gatewayIP.To4()
+	gatewayIP[3]++
+	config := &sshtunnel.Configuration{
+		SshServer: sshtunnel.SshServer{
+			Address:            gatewayIP.String(),
+			Username:           tunnel.GetUsername(),
+			PrivateKeyFilePath: "/id_rsa",
+		},
+		Forwards: []sshtunnel.Forward{{
+			Local: sshtunnel.Endpoint{
+				Host: "127.0.0.1",
+				Port: int(tunnel.GetVMPort()),
+			},
+			Remote: sshtunnel.Endpoint{
+				Host: "127.0.0.1",
+				Port: int(tunnel.GetHostPort()),
+			},
+		}},
+	}
+	err := sshtunnel.SetupTunnel(config)
+	if err != nil {
+		return err
+	}
+	return nil
 }
