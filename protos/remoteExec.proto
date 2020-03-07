@@ -27,6 +27,7 @@ message Tunnel {
     int32   HostPort = 1;
     int32   VMPort = 2;
     string  Username = 3;
+    string  Address = 4;
   }
 
 message Dummy {

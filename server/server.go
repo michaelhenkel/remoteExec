@@ -73,7 +73,7 @@ func (s *server) ExecuteCommand(ctx context.Context, in *protos.Command) (*proto
 	return cmdResult, nil
 }
 
-func (s *server) SetupTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdResult, error) {
+func (s *server) AddTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdResult, error) {
 	fmt.Println("Setting up tunnel ...")
 	cmdResult := &protos.CmdResult{}
 	fmt.Printf("Tunnel srcPort %d, hostPort %d, user %s\n", in.GetVMPort(), in.GetHostPort(), in.GetUsername())
@@ -151,12 +151,13 @@ func execCmd(cmd string) (string, error) {
 }
 
 func setupTunnel(tunnel *protos.Tunnel) error {
+	log.Println("setup tunnel called")
 	gatewayIP := getOutboundIP()
 	gatewayIP = gatewayIP.To4()
 	gatewayIP[3]++
 	config := &sshtunnel.Configuration{
 		SshServer: sshtunnel.SshServer{
-			Address:            gatewayIP.String(),
+			Address:            tunnel.GetAddress(),
 			Username:           tunnel.GetUsername(),
 			PrivateKeyFilePath: "/id_rsa",
 		},

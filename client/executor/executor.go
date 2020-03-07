@@ -59,7 +59,7 @@ func (e *Executor) ExecuteCommand(cmd string) (*string, error) {
 	return &cmdResult.Result, nil
 }
 
-func (e *Executor) SetupTunnel(vmPort, hostPort int, username string) (*string, error) {
+func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (*string, error) {
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
@@ -68,6 +68,7 @@ func (e *Executor) SetupTunnel(vmPort, hostPort int, username string) (*string, 
 		HostPort: int32(hostPort),
 		VMPort:   int32(vmPort),
 		Username: username,
+		Address:  address,
 	})
 	if err != nil {
 		return nil, err
