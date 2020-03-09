@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/michaelhenkel/remoteExec/genkey"
@@ -41,7 +42,8 @@ func (s *server) GetIP(ctx context.Context, in *protos.Dummy) (*protos.CmdResult
 func (s *server) ServiceRunning(ctx context.Context, in *protos.Service) (*protos.IsRunning, error) {
 	fmt.Println("Checking Service...")
 	isRunning := &protos.IsRunning{}
-	_, err := net.Dial(in.GetProtocol(), in.GetAddress()+string(in.GetPort()))
+	port := int(in.GetPort())
+	_, err := net.Dial(in.GetProtocol(), in.GetAddress()+":"+strconv.Itoa(port))
 	if err != nil {
 		return isRunning, err
 	}
