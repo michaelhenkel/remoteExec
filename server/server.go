@@ -38,6 +38,16 @@ func (s *server) GetIP(ctx context.Context, in *protos.Dummy) (*protos.CmdResult
 	return cmdResult, nil
 }
 
+func (s *server) Service(ctx context.Context, in *protos.Service) (*protos.IsRunning, error) {
+	fmt.Println("Checking Service...")
+	isRunning := &protos.IsRunning{}
+	_, err := net.Dial(in.GetProtocol(), in.GetAddress()+string(in.GetPort()))
+	if err != nil {
+		return isRunning, err
+	}
+	return isRunning, nil
+}
+
 func (s *server) GetFileContent(ctx context.Context, in *protos.FilePath) (*protos.CmdResult, error) {
 	fmt.Printf("Getting content for file %s\n", in.Path)
 	cmdResult := &protos.CmdResult{}

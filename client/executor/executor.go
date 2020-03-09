@@ -59,6 +59,22 @@ func (e *Executor) ExecuteCommand(cmd string) (*string, error) {
 	return &cmdResult.Result, nil
 }
 
+func (e *Executor) IsServiceRunning(address, protocol string, port int) (*bool, error) {
+	socket := e.Socket
+	c, ctx, conn, cancel := newClient(&socket)
+	defer conn.Close()
+	defer cancel()
+	cmdResult, err := c.IsServerRunning(ctx, &protos.Service{
+		Address:  address,
+		Port:     int32(port),
+		Protocol: protocol,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &cmdResult.Result, nil
+}
+
 func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (*string, error) {
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)

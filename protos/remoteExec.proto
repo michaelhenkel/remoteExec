@@ -9,6 +9,7 @@ service RemoteExec {
     rpc ExecuteCommand(Command) returns (CmdResult) {}
     rpc AddTunnel(Tunnel) returns (CmdResult) {}
     rpc PowerOff(Dummy) returns (CmdResult) {}
+    rpc IsServerRunning(Service) returns (IsRunning) {}
 }
 
 message CmdResult {
@@ -29,6 +30,16 @@ message Tunnel {
     string  Username = 3;
     string  Address = 4;
   }
+
+message Service {
+  string Address = 1;
+  int32 Port = 2;
+  string Protocol = 3;
+}
+
+message IsRunning {
+  bool Result = 1;
+}
 
 message Dummy {
     string Dummy = 1;
