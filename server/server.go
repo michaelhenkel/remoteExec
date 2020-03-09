@@ -40,13 +40,18 @@ func (s *server) GetIP(ctx context.Context, in *protos.Dummy) (*protos.CmdResult
 }
 
 func (s *server) ServiceRunning(ctx context.Context, in *protos.Service) (*protos.IsRunning, error) {
-	fmt.Println("Checking Service...")
-	isRunning := &protos.IsRunning{}
 	port := int(in.GetPort())
+	fmt.Printf("Checking Service %s %s:%s\n", in.GetProtocol(), in.GetAddress(), strconv.Itoa(port))
+	isRunning := &protos.IsRunning{
+		Result: false,
+	}
 	_, err := net.Dial(in.GetProtocol(), in.GetAddress()+":"+strconv.Itoa(port))
 	if err != nil {
+		fmt.Println("Service is not running")
 		return isRunning, err
 	}
+	fmt.Println("Service is running")
+	isRunning.Result = true
 	return isRunning, nil
 }
 

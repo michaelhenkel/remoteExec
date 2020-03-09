@@ -3,7 +3,6 @@ package executor
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -65,7 +64,6 @@ func (e *Executor) ServiceRunning(address, protocol string, port int) (*bool, er
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
-	fmt.Printf("checking service %s:%d proto %s", address, port, protocol)
 	cmdResult, err := c.ServiceRunning(ctx, &protos.Service{
 		Address:  address,
 		Port:     int32(port),
