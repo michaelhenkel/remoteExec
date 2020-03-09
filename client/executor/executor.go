@@ -59,12 +59,13 @@ func (e *Executor) ExecuteCommand(cmd string) (*string, error) {
 	return &cmdResult.Result, nil
 }
 
-func (e *Executor) IsServiceRunning(address, protocol string, port int) (*bool, error) {
+func (e *Executor) ServiceRunning(address, protocol string, port int) (*bool, error) {
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
-	cmdResult, err := c.IsServerRunning(ctx, &protos.Service{
+
+	cmdResult, err := c.ServiceRunning(ctx, &protos.Service{
 		Address:  address,
 		Port:     int32(port),
 		Protocol: protocol,
@@ -72,6 +73,7 @@ func (e *Executor) IsServiceRunning(address, protocol string, port int) (*bool, 
 	if err != nil {
 		return nil, err
 	}
+
 	return &cmdResult.Result, nil
 }
 

@@ -2,14 +2,12 @@ syntax = "proto3";
 
 package protos;
 
-// The greeting service definition.
 service RemoteExec {
     rpc GetIP(Dummy) returns (CmdResult) {}
     rpc GetFileContent(FilePath) returns (CmdResult) {}
     rpc ExecuteCommand(Command) returns (CmdResult) {}
     rpc AddTunnel(Tunnel) returns (CmdResult) {}
-    rpc PowerOff(Dummy) returns (CmdResult) {}
-    rpc IsServerRunning(Service) returns (IsRunning) {}
+    rpc ServiceRunning(Service) returns (IsRunning) {}
 }
 
 message CmdResult {
@@ -32,9 +30,9 @@ message Tunnel {
   }
 
 message Service {
-  string Address = 1;
-  int32 Port = 2;
-  string Protocol = 3;
+  string  Address = 1;
+  int32   Port = 2;
+  string  Protocol = 3;
 }
 
 message IsRunning {

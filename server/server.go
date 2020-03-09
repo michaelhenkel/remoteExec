@@ -38,7 +38,7 @@ func (s *server) GetIP(ctx context.Context, in *protos.Dummy) (*protos.CmdResult
 	return cmdResult, nil
 }
 
-func (s *server) Service(ctx context.Context, in *protos.Service) (*protos.IsRunning, error) {
+func (s *server) ServiceRunning(ctx context.Context, in *protos.Service) (*protos.IsRunning, error) {
 	fmt.Println("Checking Service...")
 	isRunning := &protos.IsRunning{}
 	_, err := net.Dial(in.GetProtocol(), in.GetAddress()+string(in.GetPort()))

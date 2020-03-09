@@ -11,7 +11,7 @@
             "mode": "auto",
             "program": "/Users/mhenkel/go/src/github.com/michaelhenkel/remoteExec/client",
             "env": {},
-            "args": ["-tunnel", "6443,6443,mhenkel","-socketpath","/Users/mhenkel/.ckube/clusters/cluster1/master/master1/00000003.00000947"]
+            "args": ["-service", "192.168.65.3,6443,tcp","-socketpath","/Users/mhenkel/.ckube/clusters/cluster1/master/master1/00000003.00000947"]
         }
     ]
 }
