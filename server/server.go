@@ -106,7 +106,7 @@ func (s *server) AddTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdR
 	return cmdResult, nil
 }
 
-func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) *protos.CmdResult {
+func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) (*protos.CmdResult, error) {
 	gatewayIP := getOutboundIP()
 	gatewayIP = gatewayIP.To4()
 	gatewayIP[3]++
@@ -134,7 +134,7 @@ func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) *proto
 	result := protos.CmdResult{
 		Result: "done",
 	}
-	return &result
+	return &result, nil
 
 }
 

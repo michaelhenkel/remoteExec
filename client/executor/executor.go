@@ -93,6 +93,23 @@ func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (
 	return &cmdResult.Result, nil
 }
 
+func (e *Executor) DeleteTunnel(vmPort, hostPort int, username, address string) (*string, error) {
+	socket := e.Socket
+	c, ctx, conn, cancel := newClient(&socket)
+	defer conn.Close()
+	defer cancel()
+	cmdResult, err := c.DeleteTunnel(ctx, &protos.Tunnel{
+		HostPort: int32(hostPort),
+		VMPort:   int32(vmPort),
+		Username: username,
+		Address:  address,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &cmdResult.Result, nil
+}
+
 func unixConnect(addr string, t time.Duration) (net.Conn, error) {
 	unixAddr, err := net.ResolveUnixAddr("unix", addr)
 	conn, err := net.DialUnix("unix", nil, unixAddr)
