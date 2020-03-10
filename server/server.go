@@ -122,18 +122,24 @@ func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) (*prot
 				Port: int(tunnel.GetVMPort()),
 			},
 			Remote: sshtunnel.Endpoint{
-				Host: "127.0.0.1",
+				Host: tunnel.GetListenAddress(),
 				Port: int(tunnel.GetHostPort()),
 			},
 		}},
 	}
 	confHash := Hash(*config)
-	cancel := tunnelMap[confHash]
-	cancel()
-	delete(tunnelMap, confHash)
 	result := protos.CmdResult{
-		Result: "done",
+		Result: "tunnel not found",
 	}
+	if cancel, ok := tunnelMap[confHash]; ok {
+		cancel()
+		delete(tunnelMap, confHash)
+		result = protos.CmdResult{
+			Result: "done",
+		}
+		return &result, nil
+	}
+
 	return &result, nil
 
 }
