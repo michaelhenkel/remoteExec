@@ -146,6 +146,7 @@ func TunnelWatcher(tunnelPath *string) error {
 }
 
 func AddTunnel(ctx context.Context, conf *Configuration) error {
+	log.Println("sshtunnel: setup tunnel called")
 	logger := logex.StandardLogger()
 	//ctx, cancel := context.WithCancel(context.Background())
 	//ctx := ossignal.InterruptOrTerminateBackgroundCtx(logger)
@@ -156,17 +157,22 @@ func AddTunnel(ctx context.Context, conf *Configuration) error {
 	sshAuth := ssh.PublicKeys(privateKey)
 	// 0ms, 100 ms, 200 ms, 400 ms, ...
 	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
-	go func() {
+	go func() error {
 		for {
+			log.Println("server: trying to setup tunnel")
 			err := connectToSshAndServe(
 				ctx,
 				conf,
 				sshAuth,
 				logex.Prefix("connectToSshAndServe", logger),
 				mkLoggerFactory(logger))
+			if err != nil {
+				log.Println("server: failed to setup tunnel")
+				return err
+			}
 			select {
 			case <-ctx.Done():
-				return
+				return nil
 			default:
 			}
 

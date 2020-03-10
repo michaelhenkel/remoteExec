@@ -20,7 +20,7 @@ var (
 )
 
 func main() {
-	socket, getIP, file, cmd, tunnel, service := getFlags()
+	socket, getIP, file, cmd, tunneladd, service, tunneldel := getFlags()
 
 	e := &executor.Executor{
 		Socket: *socket,
@@ -50,8 +50,20 @@ func main() {
 		fmt.Println(*cmdResult)
 	}
 
-	if *tunnel != "" {
-		tunnelSlice := strings.Split(*tunnel, ",")
+	if *tunneldel != "" {
+		tunnelSlice := strings.Split(*tunneldel, ",")
+		vmPort, _ := strconv.Atoi(tunnelSlice[0])
+		hostPort, _ := strconv.Atoi(tunnelSlice[1])
+		cmdResult, err := e.DeleteTunnel(vmPort, hostPort, tunnelSlice[2], tunnelSlice[3])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println(*cmdResult)
+	}
+
+	if *tunneladd != "" {
+		tunnelSlice := strings.Split(*tunneladd, ",")
 		vmPort, _ := strconv.Atoi(tunnelSlice[0])
 		hostPort, _ := strconv.Atoi(tunnelSlice[1])
 		cmdResult, err := e.SetupTunnel(vmPort, hostPort, tunnelSlice[2], tunnelSlice[3])
@@ -77,14 +89,15 @@ func main() {
 
 }
 
-func getFlags() (*string, *bool, *string, *string, *string, *string) {
+func getFlags() (*string, *bool, *string, *string, *string, *string, *string) {
 	socket := flag.String("socketpath", "/tmp/remotexec.socket", "absolute path to unix socket")
 	ip := flag.Bool("ip", false, "Get ip")
 	file := flag.String("file", "", "file to read")
 	cmd := flag.String("cmd", "", "command to execute")
-	tunnel := flag.String("tunnel", "", "tunnel to be added")
+	tunneladd := flag.String("tunneladd", "", "tunnel to be added")
+	tunneldel := flag.String("tunneldel", "", "tunnel to be deleted")
 	service := flag.String("service", "", "service to be checked")
 	flag.Parse()
 
-	return socket, ip, file, cmd, tunnel, service
+	return socket, ip, file, cmd, tunneladd, service, tunneldel
 }

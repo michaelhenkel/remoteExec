@@ -210,7 +210,7 @@ func execCmd(cmd string) (string, error) {
 }
 
 func addTunnel(tunnel *protos.Tunnel) error {
-	log.Println("setup tunnel called")
+	log.Println("server: setup tunnel called")
 	gatewayIP := getOutboundIP()
 	gatewayIP = gatewayIP.To4()
 	gatewayIP[3]++
@@ -235,7 +235,12 @@ func addTunnel(tunnel *protos.Tunnel) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	tunnelMap[confHash] = cancel
-	sshtunnel.AddTunnel(ctx, config)
+	err := sshtunnel.AddTunnel(ctx, config)
+	if err != nil {
+		log.Println("server: setup tunnel failed")
+		return err
+	}
+	log.Println("server: setup tunnel succeeded")
 	return nil
 }
 
