@@ -118,11 +118,11 @@ func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) (*prot
 		},
 		Forwards: []sshtunnel.Forward{{
 			Local: sshtunnel.Endpoint{
-				Host: "127.0.0.1",
+				Host: tunnel.GetListenAddress(),
 				Port: int(tunnel.GetVMPort()),
 			},
 			Remote: sshtunnel.Endpoint{
-				Host: tunnel.GetListenAddress(),
+				Host: "127.0.0.1",
 				Port: int(tunnel.GetHostPort()),
 			},
 		}},
@@ -225,11 +225,11 @@ func addTunnel(tunnel *protos.Tunnel) error {
 		},
 		Forwards: []sshtunnel.Forward{{
 			Local: sshtunnel.Endpoint{
-				Host: "127.0.0.1",
+				Host: tunnel.GetListenAddress(),
 				Port: int(tunnel.GetVMPort()),
 			},
 			Remote: sshtunnel.Endpoint{
-				Host: tunnel.GetListenAddress(),
+				Host: "127.0.0.1",
 				Port: int(tunnel.GetHostPort()),
 			},
 		}},
