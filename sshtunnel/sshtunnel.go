@@ -159,7 +159,7 @@ func AddTunnel(ctx context.Context, conf *Configuration) error {
 	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
 	go func() error {
 		for {
-			log.Println("server: trying to setup tunnel")
+			log.Println("sshtunnel: trying to setup tunnel")
 			err := connectToSshAndServe(
 				ctx,
 				conf,
@@ -167,7 +167,7 @@ func AddTunnel(ctx context.Context, conf *Configuration) error {
 				logex.Prefix("connectToSshAndServe", logger),
 				mkLoggerFactory(logger))
 			if err != nil {
-				log.Println("server: failed to setup tunnel")
+				log.Println("sshtunnel: failed to setup tunnel ", err)
 				return err
 			}
 			select {

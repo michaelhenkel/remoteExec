@@ -237,7 +237,7 @@ func addTunnel(tunnel *protos.Tunnel) error {
 	tunnelMap[confHash] = cancel
 	err := sshtunnel.AddTunnel(ctx, config)
 	if err != nil {
-		log.Println("server: setup tunnel failed")
+		log.Println("server: setup tunnel failed ", err)
 		return err
 	}
 	log.Println("server: setup tunnel succeeded")
