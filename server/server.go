@@ -211,9 +211,6 @@ func execCmd(cmd string) (string, error) {
 
 func addTunnel(tunnel *protos.Tunnel) error {
 	log.Println("server: setup tunnel called")
-	gatewayIP := getOutboundIP()
-	gatewayIP = gatewayIP.To4()
-	gatewayIP[3]++
 	config := &sshtunnel.Configuration{
 		SshServer: sshtunnel.SshServer{
 			Address:            tunnel.GetAddress(),
@@ -226,13 +223,12 @@ func addTunnel(tunnel *protos.Tunnel) error {
 				Port: int(tunnel.GetVMPort()),
 			},
 			Remote: sshtunnel.Endpoint{
-				Host: "127.0.0.1",
+				Host: tunnel.GetListenAddress(),
 				Port: int(tunnel.GetHostPort()),
 			},
 		}},
 	}
 	confHash := Hash(*config)
-
 	ctx, cancel := context.WithCancel(context.Background())
 	tunnelMap[confHash] = cancel
 	err := sshtunnel.AddTunnel(ctx, config)

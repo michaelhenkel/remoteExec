@@ -77,16 +77,17 @@ func (e *Executor) ServiceRunning(address, protocol string, port int) (*bool, er
 	return &cmdResult.Result, nil
 }
 
-func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (*string, error) {
+func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address, listenAddress string) (*string, error) {
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
 	defer cancel()
 	cmdResult, err := c.AddTunnel(ctx, &protos.Tunnel{
-		HostPort: int32(hostPort),
-		VMPort:   int32(vmPort),
-		Username: username,
-		Address:  address,
+		HostPort:      int32(hostPort),
+		VMPort:        int32(vmPort),
+		Username:      username,
+		Address:       address,
+		ListenAddress: listenAddress,
 	})
 	if err != nil {
 		fmt.Println("executor: tunnel setup failed")

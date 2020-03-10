@@ -66,7 +66,7 @@ func main() {
 		tunnelSlice := strings.Split(*tunneladd, ",")
 		vmPort, _ := strconv.Atoi(tunnelSlice[0])
 		hostPort, _ := strconv.Atoi(tunnelSlice[1])
-		cmdResult, err := e.SetupTunnel(vmPort, hostPort, tunnelSlice[2], tunnelSlice[3])
+		cmdResult, err := e.SetupTunnel(vmPort, hostPort, tunnelSlice[2], tunnelSlice[3], tunnelSlice[4])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

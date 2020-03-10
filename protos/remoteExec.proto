@@ -28,6 +28,7 @@ message Tunnel {
     int32   VMPort = 2;
     string  Username = 3;
     string  Address = 4;
+    string  ListenAddress = 5;
   }
 
 message Service {
