@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -22,8 +23,9 @@ import (
 //go:generate protoc -I ../protos --go_out=plugins=grpc:../protos ../protos/remoteExec.proto
 
 var (
-	buf    bytes.Buffer
-	logger = log.New(&buf, "logger: ", log.Lshortfile)
+	buf       bytes.Buffer
+	logger    = log.New(&buf, "logger: ", log.Lshortfile)
+	tunnelMap = make(map[string]context.CancelFunc)
 )
 
 type server struct {
@@ -94,7 +96,7 @@ func (s *server) AddTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdR
 	fmt.Println("Setting up tunnel ...")
 	cmdResult := &protos.CmdResult{}
 	fmt.Printf("Tunnel srcPort %d, hostPort %d, user %s\n", in.GetVMPort(), in.GetHostPort(), in.GetUsername())
-	err := setupTunnel(in)
+	err := addTunnel(in)
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		cmdResult.Result = err.Error()
@@ -102,6 +104,38 @@ func (s *server) AddTunnel(ctx context.Context, in *protos.Tunnel) (*protos.CmdR
 	}
 	cmdResult.Result = "tunnel created"
 	return cmdResult, nil
+}
+
+func (s *server) DeleteTunnel(ctx context.Context, tunnel *protos.Tunnel) *protos.CmdResult {
+	gatewayIP := getOutboundIP()
+	gatewayIP = gatewayIP.To4()
+	gatewayIP[3]++
+	config := &sshtunnel.Configuration{
+		SshServer: sshtunnel.SshServer{
+			Address:            tunnel.GetAddress(),
+			Username:           tunnel.GetUsername(),
+			PrivateKeyFilePath: "/id_rsa",
+		},
+		Forwards: []sshtunnel.Forward{{
+			Local: sshtunnel.Endpoint{
+				Host: "127.0.0.1",
+				Port: int(tunnel.GetVMPort()),
+			},
+			Remote: sshtunnel.Endpoint{
+				Host: "127.0.0.1",
+				Port: int(tunnel.GetHostPort()),
+			},
+		}},
+	}
+	confHash := Hash(*config)
+	cancel := tunnelMap[confHash]
+	cancel()
+	delete(tunnelMap, confHash)
+	result := protos.CmdResult{
+		Result: "done",
+	}
+	return &result
+
 }
 
 func main() {
@@ -123,11 +157,18 @@ func main() {
 	}
 
 	logger.Println("Started serving")
-	socket := getFlag()
-	if _, err := os.Stat(*socket); err == nil {
-		logger.Println("socket exists, removing it")
-		err = os.Remove(*socket)
-	}
+
+	socket, tunnelFile := getFlag()
+	logger.Println(*tunnelFile)
+	/*
+		if _, err := os.Stat(*socket); err == nil {
+			logger.Println("socket exists, removing it")
+			err = os.Remove(*socket)
+		}
+
+		sshtunnel.TunnelWatcher(tunnelFile)
+	*/
+
 	lis, err := net.Listen("unix", *socket)
 	if err != nil {
 		logger.Fatalf("failed to listen: %v", err)
@@ -139,10 +180,11 @@ func main() {
 	}
 }
 
-func getFlag() (socket *string) {
+func getFlag() (socket *string, tunnelFile *string) {
 	socket = flag.String("socketpath", "/tmp/remotexec.socket", "absolute path to unix socket")
+	tunnelFile = flag.String("tunnelpath", "/tmp/sshtunnel.json", "absolute path to tunnel json")
 	flag.Parse()
-	return socket
+	return socket, tunnelFile
 }
 
 func getOutboundIP() net.IP {
@@ -167,7 +209,7 @@ func execCmd(cmd string) (string, error) {
 	return string(out), nil
 }
 
-func setupTunnel(tunnel *protos.Tunnel) error {
+func addTunnel(tunnel *protos.Tunnel) error {
 	log.Println("setup tunnel called")
 	gatewayIP := getOutboundIP()
 	gatewayIP = gatewayIP.To4()
@@ -189,9 +231,16 @@ func setupTunnel(tunnel *protos.Tunnel) error {
 			},
 		}},
 	}
-	err := sshtunnel.SetupTunnel(config)
-	if err != nil {
-		return err
-	}
+	confHash := Hash(*config)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	tunnelMap[confHash] = cancel
+	sshtunnel.AddTunnel(ctx, config)
 	return nil
+}
+
+func Hash(s sshtunnel.Configuration) string {
+	var b bytes.Buffer
+	gob.NewEncoder(&b).Encode(s)
+	return string(b.Bytes())
 }

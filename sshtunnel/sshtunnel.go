@@ -11,7 +11,6 @@ import (
 	"github.com/function61/gokit/backoff"
 	"github.com/function61/gokit/bidipipe"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -121,36 +120,63 @@ func forwardOnePort(
 	return nil
 }
 
-func SetupTunnel(conf *Configuration) error {
+func TunnelWatcher(tunnelPath *string) error {
+
+	_, err := os.Stat(*tunnelPath)
+	if !os.IsNotExist(err) {
+		_, err := os.Create(*tunnelPath)
+		if err != nil {
+			return err
+		}
+	}
+	/*
+		watchFile := strings.Split(*tunnelPath, "/")
+		watchPath := strings.TrimSuffix(*tunnelPath, watchFile[len(watchFile)-1])
+		tunnelWatcher, err := WatchFile(watchPath, time.Second, func() {
+			_, err := os.Stat(*tunnelPath)
+			if !os.IsNotExist(err) {
+				nodeManager(controlNodesPtr, "control", contrailClient)
+			} else if os.IsNotExist(err) {
+				controlNodes(contrailClient, []*types.ControlNode{})
+			}
+		})
+	*/
+	return nil
+
+}
+
+func AddTunnel(ctx context.Context, conf *Configuration) error {
 	logger := logex.StandardLogger()
-	ctx := ossignal.InterruptOrTerminateBackgroundCtx(logger)
+	//ctx, cancel := context.WithCancel(context.Background())
+	//ctx := ossignal.InterruptOrTerminateBackgroundCtx(logger)
 	privateKey, err := signerFromPrivateKeyFile(conf.SshServer.PrivateKeyFilePath)
 	if err != nil {
 		return err
 	}
-
 	sshAuth := ssh.PublicKeys(privateKey)
-
 	// 0ms, 100 ms, 200 ms, 400 ms, ...
 	backoffTime := backoff.ExponentialWithCappedMax(100*time.Millisecond, 5*time.Second)
+	go func() {
+		for {
+			err := connectToSshAndServe(
+				ctx,
+				conf,
+				sshAuth,
+				logex.Prefix("connectToSshAndServe", logger),
+				mkLoggerFactory(logger))
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
 
-	for {
-		err := connectToSshAndServe(
-			ctx,
-			conf,
-			sshAuth,
-			logex.Prefix("connectToSshAndServe", logger),
-			mkLoggerFactory(logger))
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
+			logex.Levels(logger).Error.Println(err.Error())
+
+			time.Sleep(backoffTime())
 		}
+	}()
 
-		logex.Levels(logger).Error.Println(err.Error())
-
-		time.Sleep(backoffTime())
-	}
+	return nil
 }
 
 func connectSSH(ctx context.Context, addr string, sshConfig *ssh.ClientConfig) (*ssh.Client, error) {

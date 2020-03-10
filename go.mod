@@ -10,4 +10,5 @@ require (
 	github.com/spf13/cobra v0.0.6 // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	google.golang.org/grpc v1.27.1
+	gopkg.in/fsnotify.v1 v1.4.7
 )
