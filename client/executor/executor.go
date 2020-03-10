@@ -78,7 +78,6 @@ func (e *Executor) ServiceRunning(address, protocol string, port int) (*bool, er
 }
 
 func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (*string, error) {
-	fmt.Println("executor: received tunnel setup command")
 	socket := e.Socket
 	c, ctx, conn, cancel := newClient(&socket)
 	defer conn.Close()
@@ -93,7 +92,6 @@ func (e *Executor) SetupTunnel(vmPort, hostPort int, username, address string) (
 		fmt.Println("executor: tunnel setup failed")
 		return nil, err
 	}
-	fmt.Println("executor: tunnel setup succeeded")
 	return &cmdResult.Result, nil
 }
 
